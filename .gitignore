@@ -1,8 +1,8 @@
 .env
 
 node_modules/
-postgres/
-mongo/
+/postgres
+/mongo
 dist/
 build/
 coverage/
