@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { LoginUserDto, RegisterUserDto } from "../../domain";
-import { AuthService } from "../services/auth.service";
+import { AuthService } from "../services";
 import { CustomError } from "../../domain";
 
 export class AuthController {
@@ -38,6 +38,7 @@ export class AuthController {
   }
 
   validateEmail = (req: Request, res: Response) => {
-    res.json('validateEmail');
+    const { token } = req.params;
+    res.json(token);
   }
 }

@@ -1,12 +1,15 @@
-import { bcryptAdapter, JwtAdapter } from "../../config";
+import { bcryptAdapter, envs, JwtAdapter } from "../../config";
 import { UserModel } from "../../data";
-import { CustomError, LoginUserDto, UserEntity } from "../../domain";
-import { RegisterUserDto } from "../../domain";
+import { CustomError, RegisterUserDto, LoginUserDto, UserEntity } from "../../domain";
+import { EmailService } from "./email.service";
 
 export class AuthService {
 
   // DI
-  constructor() { }
+  constructor(
+    // DI - email service
+    private readonly emailService: EmailService,
+  ) { }
 
   public async registerUser(registerUserDto: RegisterUserDto) {
     const existUser = await UserModel.findOne({ email: registerUserDto.email });
@@ -20,6 +23,7 @@ export class AuthService {
       await user.save();
 
       // email de confirmación
+      await this.sendEmailValidationLink(user.email);
 
       const { password, ...userEntity } = UserEntity.fromObject(user);
 
@@ -51,5 +55,29 @@ export class AuthService {
       user: userEntity,
       token: token,
     }
+  }
+
+  private sendEmailValidationLink = async (email: string) => {
+
+    const token = await JwtAdapter.generateToken({ email });
+    if (!token) throw CustomError.internalServer('Error getting token');
+
+    const link = `${envs.WEBSERVICE_URL}/auth/validate-email/${token}`;
+    const html = `
+      <h1>Válida tu correo electrónico</h1>
+      <p>Haz clic en el enlace para válidar tu correo</p>
+      <a href="${link}">Válida tu correo: ${email}</a>
+    `;
+
+    const options = {
+      to: email,
+      subject: 'Válida tu correo electrónico',
+      htmlBody: html
+    }
+
+    const isSent = await this.emailService.sendEmail(options);
+    if (!isSent) throw CustomError.internalServer('Error sending email');
+
+    return true;
   }
 }
