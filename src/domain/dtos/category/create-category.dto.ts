@@ -6,7 +6,7 @@ export class CreateCategoryDto {
     public readonly available: boolean,
   ) { }
 
-  static create(object: { [key: string]: any }): [string | undefined, CreateCategoryDto | undefined] {
+  static create(object: { [key: string]: any } = {}): [string | undefined, CreateCategoryDto | undefined] {
     const { name, available = false } = object;
     let availableBoolean = available;
 
